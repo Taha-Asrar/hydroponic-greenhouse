@@ -131,5 +131,5 @@ Le système exécute une boucle toutes les 10 secondes via `decision_engine.py` 
 - **Emails non envoyés** : Utilisez un "Mot de passe d'application" pour Gmail.
 
 ---
-**Équipe** : Projet réalisé dans le cadre du cours Arduino — ISCAE Casablanca.  
+**Équipe** : Projet réalisé dans le cadre du cours Arduino — LSI 1ère année 2025/2026.  
 **Licence** : Usage éducatif uniquement.
