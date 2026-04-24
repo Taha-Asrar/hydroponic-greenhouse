@@ -8,13 +8,13 @@ import "./DashboardPage.css";
 export default function DashboardPage() {
   const [capteurs, setCapteurs] = useState([]);
   const [actionneurs, setActionneurs] = useState([]);
+  const [hwStatus, setHwStatus] = useState({ connected: false, mock_mode: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
     
-    // Configurer Socket.IO
     const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
     const socket = io(socketUrl);
 
@@ -25,13 +25,14 @@ export default function DashboardPage() {
     socket.on('actuators_update', (data) => {
       console.log('Mise à jour des actionneurs via Socket.IO:', data);
       setActionneurs(prev => prev.map(a => {
-        if (a.type === 'pompe_alimentation' && data.pompe_alimentation !== undefined) {
-          return { ...a, actif: data.pompe_alimentation };
+        let updated = { ...a };
+        if (data[a.type] !== undefined) {
+          updated.actif = data[a.type];
         }
-        if (a.type === 'pompe_evacuation' && data.pompe_evacuation !== undefined) {
-          return { ...a, actif: data.pompe_evacuation };
+        if (data[`${a.type}_mode`] !== undefined) {
+          updated.mode_automatique = data[`${a.type}_mode`] === 'auto';
         }
-        return a;
+        return updated;
       }));
     });
 
@@ -43,13 +44,14 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // We assume endpoints /capteurs and /actionneurs exist
-      const [resCapteurs, resActionneurs] = await Promise.all([
-        client.get("/capteurs/"),
-        client.get("/actionneurs/")
+      const [resCapteurs, resActionneurs, resStatus] = await Promise.all([
+        client.get("/capteurs"),
+        client.get("/actionneurs"),
+        client.get("/actionneurs/status")
       ]);
       setCapteurs(resCapteurs.data || []);
       setActionneurs(resActionneurs.data || []);
+      setHwStatus(resStatus.data || { connected: false, mock_mode: false });
       setError(null);
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
@@ -62,14 +64,20 @@ export default function DashboardPage() {
   const handleToggleActuator = async (id, newStatus) => {
     try {
       // Optimistic update
-      setActionneurs(prev => prev.map(a => a.id_actionneur === id ? { ...a, actif: newStatus } : a));
-      
-      // Call API
-      // await client.post(`/actionneurs/${id}/toggle`, { actif: newStatus });
-      // For now, if the endpoint doesn't exist, we just simulate it
+      setActionneurs(prev => prev.map(a => a.id_actionneur === id ? { ...a, actif: newStatus, mode_automatique: false } : a));
+      await client.post(`/actionneurs/${id}/toggle`, { actif: newStatus });
     } catch (err) {
       console.error("Failed to toggle actuator:", err);
-      // Revert on failure
+      fetchDashboardData();
+    }
+  };
+
+  const handleResetAuto = async (id) => {
+    try {
+      setActionneurs(prev => prev.map(a => a.id_actionneur === id ? { ...a, mode_automatique: true } : a));
+      await client.post(`/actionneurs/${id}/auto`);
+    } catch (err) {
+      console.error("Failed to reset auto mode:", err);
       fetchDashboardData();
     }
   };
@@ -79,8 +87,14 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-page">
       <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Vue d'ensemble de la serre hydroponique en temps réel</p>
+        <div className="header-content">
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Vue d'ensemble de la serre hydroponique en temps réel</p>
+        </div>
+        <div className={`hardware-status ${hwStatus.connected ? 'status-connected' : 'status-disconnected'}`}>
+          <span className="status-dot"></span>
+          {hwStatus.connected ? 'Arduino Connecté' : 'Arduino Déconnecté'}
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -94,7 +108,7 @@ export default function DashboardPage() {
                 key={capteur.id_capteur}
                 name={capteur.nom}
                 type={capteur.type_capteur}
-                value={capteur.dernier_releve || (Math.random() * 10 + 20).toFixed(1)} // Mock value for now
+                value={capteur.dernier_releve}
                 unit={capteur.unite}
                 status={capteur.actif ? "normal" : "warning"}
               />
@@ -107,11 +121,20 @@ export default function DashboardPage() {
           <h2 className="section-title">Actionneurs</h2>
           <div className="actuators-grid">
             {actionneurs.map(act => (
-              <ActuatorControl 
-                key={act.id_actionneur}
-                actuator={act}
-                onToggle={handleToggleActuator}
-              />
+              <div key={act.id_actionneur} className="actuator-control-wrapper">
+                <ActuatorControl 
+                  actuator={act}
+                  onToggle={handleToggleActuator}
+                />
+                {!act.mode_automatique && (
+                  <button 
+                    className="reset-auto-btn" 
+                    onClick={() => handleResetAuto(act.id_actionneur)}
+                  >
+                    Repasser en Auto
+                  </button>
+                )}
+              </div>
             ))}
             {actionneurs.length === 0 && <p className="empty-state">Aucun actionneur détecté.</p>}
           </div>

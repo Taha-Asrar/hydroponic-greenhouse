@@ -62,8 +62,9 @@ def create_app(config_class=None):
     def internal_error(error):
         return jsonify({"error": "Erreur interne du serveur"}), 500
 
-    from services.decision_engine import evaluate_ebb_and_flow
+    from services.decision_engine import evaluate_ebb_and_flow, process_sensor_data
     from services.serial_service import serial_service
+    from services.notification_service import notification_service
     
     with app.app_context():
         # Initialiser la connexion série au démarrage
@@ -74,12 +75,32 @@ def create_app(config_class=None):
         with app.app_context():
             evaluate_ebb_and_flow()
 
+    def run_sensors():
+        with app.app_context():
+            process_sensor_data()
+
+    def run_hourly_reports():
+        with app.app_context():
+            notification_service.send_hourly_report()
+
     # Configurer et démarrer le scheduler
     scheduler.add_job(
         id='ebb_and_flow_job',
         func=run_ebb_flow,
         trigger='interval',
         seconds=10  # Évaluer toutes les 10 secondes pour le dev
+    )
+    scheduler.add_job(
+        id='sensors_job',
+        func=run_sensors,
+        trigger='interval',
+        seconds=5  # Lire les capteurs toutes les 5 secondes
+    )
+    scheduler.add_job(
+        id='hourly_report_job',
+        func=run_hourly_reports,
+        trigger='cron',
+        minute=0  # Exécuter à la minute 0 de chaque heure (toutes les heures)
     )
     scheduler.start()
 

@@ -16,6 +16,8 @@ export default function ActuatorControl({ actuator, onToggle }) {
         return "🔄";
       case "eclairage":
         return "💡";
+      case "ventilateur":
+        return "💨";
       default:
         return "⚙️";
     }

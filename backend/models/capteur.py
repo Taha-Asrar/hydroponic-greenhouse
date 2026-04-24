@@ -13,6 +13,7 @@ class Capteur(db.Model):
     valeur_max_possible = db.Column(db.Numeric)
     actif = db.Column(db.Boolean, default=True)
     port_serie = db.Column(db.String(50))
+    dernier_releve = db.Column(db.Numeric, default=0.0)
 
     # Relations
     lectures = db.relationship("LectureCapteur", backref="capteur", lazy="dynamic")
@@ -28,6 +29,7 @@ class Capteur(db.Model):
             "valeur_max_possible": float(self.valeur_max_possible) if self.valeur_max_possible else None,
             "actif": self.actif,
             "port_serie": self.port_serie,
+            "dernier_releve": float(self.dernier_releve) if self.dernier_releve else 0.0,
         }
 
     def __repr__(self):

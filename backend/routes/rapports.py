@@ -1,8 +1,14 @@
 """Routes — Rapports PDF."""
-from flask import Blueprint, request, jsonify
+import os
+from datetime import datetime
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models.rapport import Rapport
+from models.cycle_culture import CycleCulture
+from models.variete_plante import VarietePlante
+from models.recette_culture import RecetteCulture
+from services.pdf_service import pdf_service
 
 rapports_bp = Blueprint("rapports", __name__)
 
@@ -29,12 +35,26 @@ def generer_rapport():
     if not data or "id_cycle" not in data:
         return jsonify({"error": "Le champ 'id_cycle' est requis"}), 400
 
-    # TODO: Appeler pdf_service pour générer le PDF
+    # Récupérer les données pour le PDF
+    cycle = CycleCulture.query.get_or_404(data["id_cycle"])
+    variete = VarietePlante.query.get(cycle.id_variete)
+    recette = RecetteCulture.query.get(cycle.id_recette)
+    
+    # Chemin relatif pour le stockage
+    filename = f"rapport_cycle_{cycle.id_cycle}_{datetime.now().strftime('%Y%H%M')}.pdf"
+    # S'assurer que le dossier static/reports existe
+    upload_dir = os.path.join(current_app.root_path, 'static', 'reports')
+    os.makedirs(upload_dir, exist_ok=True)
+    filepath = os.path.join(upload_dir, filename)
+
+    # Appeler pdf_service pour générer le PDF
+    pdf_service.generate_cycle_report(cycle, variete, recette, [], filepath)
+
     rapport = Rapport(
-        id_cycle=data["id_cycle"],
+        id_cycle=cycle.id_cycle,
         id_utilisateur=int(user_id),
         type=data.get("type", "resume_cycle"),
-        chemin_pdf=f"reports/rapport_cycle_{data['id_cycle']}.pdf",
+        chemin_pdf=f"static/reports/{filename}",
     )
     db.session.add(rapport)
     db.session.commit()

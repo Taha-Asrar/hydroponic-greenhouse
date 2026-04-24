@@ -8,7 +8,8 @@ class Actionneur(db.Model):
     id_actionneur = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(30))  # pompe_alimentation, pompe_evacuation, eclairage
     nom = db.Column(db.String(150), nullable=False)
-    actif = db.Column(db.Boolean, default=True)
+    actif = db.Column(db.Boolean, default=False) # True = ON, False = OFF
+    mode_automatique = db.Column(db.Boolean, default=True) # True = Auto, False = Manuel
     port_serie = db.Column(db.String(50))
 
     # Relations
@@ -20,6 +21,7 @@ class Actionneur(db.Model):
             "type": self.type,
             "nom": self.nom,
             "actif": self.actif,
+            "mode_automatique": self.mode_automatique,
             "port_serie": self.port_serie,
         }
 
