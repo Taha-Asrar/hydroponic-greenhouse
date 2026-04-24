@@ -1,1 +1,87 @@
 
+# ========================
+# Python / Backend
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+.eggs/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Flask / SQLAlchemy
+instance/
+*.db
+*.sqlite3
+
+# Migrations (keep folder, ignore pycache)
+backend/migrations/__pycache__/
+
+# ========================
+# Node.js / Frontend
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# Build output
+frontend/dist/
+frontend/build/
+
+# ========================
+# Environment variables
+# ========================
+.env
+.env.local
+.env.*.local
+!.env.example
+!backend/.env.example
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ========================
+# Reports / Generated
+# ========================
+backend/reports/*.pdf
+*.log
+
+# ========================
+# Arduino (compiled)
+# ========================
+arduino/.build/
+arduino/*.hex
