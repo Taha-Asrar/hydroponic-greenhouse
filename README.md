@@ -96,17 +96,30 @@ Accès : `http://localhost:5173` | **Admin** : `admin@hydro.local` / `password12
 
 ## 🔌 Configuration Matérielle (Arduino)
 
-| Composant | Pin Arduino | Relais / Type |
-|-----------|-------------|---------------|
-| **Pompe Alimentation** | Pin 7 | Relais 1 |
-| **Pompe Évacuation** | Pin 8 | Relais 2 |
-| **Éclairage LED** | Pin 9 | Relais 3 |
-| **Ventilateur** | Pin 10 | Relais 4 |
-| **HC-SR04 (Niveau)** | Pin 2 (Trig) / 3 (Echo) | Ultrason |
-| **DHT22 (Air)** | Pin 4 | Digital |
-| **DS18B20 (Eau)** | Pin 5 | OneWire |
-| **Capteur EC** | Pin A0 | Analogique |
-| **BH1750 (Lux)** | SDA/SCL (A4/A5) | I2C |
+### Capteurs
+
+| Composant | Modèle | Pin Arduino | Type |
+|-----------|--------|-------------|------|
+| **Temp. & Humidité Air** | DHT11 | Pin 4 | Digital |
+| **Temp. Eau** | DS18B20 | Pin 5 | OneWire |
+| **Conductivité (EC)** | DFRobot SEN0244 | A0 | Analogique |
+| **Luminosité** | LDR (Photoresistor) | A1 | Analogique (diviseur 10kΩ) |
+| **Niveau Eau** | Robodo SEN18 | A2 | Analogique |
+
+### Actionneurs (2× modules relais, logique **active-LOW**)
+
+| Module Relais | Entrée | Actionneur | Pin Arduino |
+|---------------|--------|------------|-------------|
+| Module 1 | IN2 | Ventilateur 12 V | Pin 7 |
+| Module 1 | IN3 | Pompe Évacuation 12 V | Pin 8 |
+| Module 1 | IN4 | Pompe Alimentation 12 V | Pin 9 |
+| Module 2 | IN1 | Lampe 220 V | Pin 10 |
+
+### Câblage LDR (Diviseur de Tension)
+
+```
+5V ──── [ LDR ] ──── A1 ──── [ 10kΩ ] ──── GND
+```
 
 ---
 

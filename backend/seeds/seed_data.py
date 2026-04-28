@@ -43,7 +43,8 @@ def seed_database():
         actionneurs = [
             {"type": "pompe_alimentation", "nom": "Pompe Alimentation"},
             {"type": "pompe_evacuation", "nom": "Pompe Évacuation"},
-            {"type": "eclairage", "nom": "Éclairage LED"}
+            {"type": "eclairage", "nom": "Lampe"},
+            {"type": "ventilateur", "nom": "Ventilateur"}
         ]
 
         for actionneur_data in actionneurs:

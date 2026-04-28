@@ -1,37 +1,85 @@
-# 🔌 Firmware Arduino - Serre Hydroponique
+# 🔌 Arduino Firmware — Serre Hydroponique
 
-Ce dossier contient le code C++ pour la carte Arduino Uno pilotant la serre.
+Firmware pour Arduino Uno qui lit les capteurs réels et contrôle les actionneurs via des commandes série envoyées par le backend Flask.
 
-## 🛠️ Configuration Matérielle
+---
 
-### Branchement des Actionneurs (Relais 5V)
-- **Pin 7** : Pompe d'Alimentation
-- **Pin 8** : Pompe d'Évacuation
-- **Pin 9** : Éclairage LED (Grow Light)
-- **Pin 10** : Ventilateur
+## 📦 Bibliothèques Requises
 
-### Branchement des Capteurs
-- **HC-SR04** (Niveau d'eau) : Trig (Pin 2), Echo (Pin 3)
-- **DHT22** (Air) : Data (Pin 4)
-- **DS18B20** (Eau) : Data (Pin 5)
-- **Capteur EC** : Analog A0
-- **BH1750** (Luminosité) : I2C (SDA/SCL)
+Installez ces bibliothèques via **Arduino IDE → Outils → Gérer les bibliothèques** :
 
-## 📡 Communication Série
-L'Arduino communique avec le serveur PC via USB à **9600 bauds**.
+| Bibliothèque | Auteur | Usage |
+|---------------|--------|-------|
+| **DHT sensor library** | Adafruit | Lecture du DHT11 (temp air + humidité) |
+| **OneWire** | Paul Stoffregen | Protocole OneWire pour le DS18B20 |
+| **DallasTemperature** | Miles Burton | Lecture simplifiée du DS18B20 |
 
-### Format des données envoyées (Sortie)
-Toutes les 5 secondes, l'Arduino envoie une chaîne formatée :
-`SENSORS|niveau_eau:X|temp_eau:X|EC:X|temp_air:X|humidite:X|luminosite:X`
+> **Note :** La bibliothèque DHT d'Adafruit nécessite aussi **Adafruit Unified Sensor** — elle sera installée automatiquement.
 
-### Format des commandes reçues (Entrée)
-L'Arduino écoute les commandes suivantes :
-- `PUMP_IN:1` / `PUMP_IN:0`
-- `PUMP_OUT:1` / `PUMP_OUT:0`
-- `LED:1` / `LED:0`
-- `FAN:1` / `FAN:0`
+---
 
-## 🚀 Installation
-1. Ouvrez `main.ino` dans l'Arduino IDE.
-2. Installez les bibliothèques nécessaires (DHT, OneWire, DallasTemperature, BH1750) via le gestionnaire de bibliothèques.
-3. Téléversez sur votre Arduino Uno.
+## 🔧 Câblage Résumé
+
+### Capteurs
+
+| Capteur | Pin | Notes |
+|---------|-----|-------|
+| DHT11 | D4 | Data pin, résistance pull-up 10kΩ recommandée |
+| DS18B20 | D5 | Résistance pull-up 4.7kΩ entre Data et VCC |
+| DFRobot SEN0244 (EC) | A0 | Sortie analogique directe |
+| LDR (Photoresistor) | A1 | Diviseur de tension : `5V → LDR → A1 → 10kΩ → GND` |
+| Robodo SEN18 (Niveau) | A2 | Sortie analogique directe |
+
+### Actionneurs (Relais active-LOW)
+
+| Relais | Pin | Actionneur |
+|--------|-----|------------|
+| Module 1 – IN2 | D7 | Ventilateur 12 V |
+| Module 1 – IN3 | D8 | Pompe Évacuation 12 V |
+| Module 1 – IN4 | D9 | Pompe Alimentation 12 V |
+| Module 2 – IN1 | D10 | Lampe 220 V |
+
+---
+
+## 📡 Protocole Série (9600 baud)
+
+### Arduino → PC (Données capteurs)
+```
+SENSORS|niveau_eau:2.3|temp_eau:22.1|EC:1200|temp_air:25.4|humidite:62.0|luminosite:850
+```
+
+### PC → Arduino (Commandes actionneurs)
+```
+PUMP_IN:1     → Allumer pompe alimentation
+PUMP_IN:0     → Éteindre pompe alimentation
+PUMP_OUT:1    → Allumer pompe évacuation
+PUMP_OUT:0    → Éteindre pompe évacuation
+LED:1         → Allumer lampe
+LED:0         → Éteindre lampe
+FAN:1         → Allumer ventilateur
+FAN:0         → Éteindre ventilateur
+```
+
+### Arduino → PC (Accusés de réception)
+```
+ACK:PUMP_IN_ON / ACK:PUMP_IN_OFF
+ACK:PUMP_OUT_ON / ACK:PUMP_OUT_OFF
+ACK:LED_ON / ACK:LED_OFF
+ACK:FAN_ON / ACK:FAN_OFF
+```
+
+---
+
+## ⚙️ Calibration
+
+### EC Sensor (SEN0244)
+Le coefficient `EC_K_VALUE` dans le code est à `1.0` par défaut. Pour calibrer :
+1. Plongez le capteur dans une solution EC connue (ex: 1413 µS/cm).
+2. Notez la valeur affichée sur le moniteur série.
+3. Ajustez `EC_K_VALUE = valeur_affichée / valeur_réelle`.
+
+### Niveau d'eau (SEN18)
+`WATER_LEVEL_MAX_CM` est réglé à `4.0` cm (longueur active du capteur). Ajustez si votre installation est différente.
+
+### LDR
+La formule Lux est une approximation (±30%) basée sur un LDR GL5528. Si vous utilisez un autre modèle, ajustez les constantes dans `readLuxFromLDR()`.

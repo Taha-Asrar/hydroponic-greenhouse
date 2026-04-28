@@ -74,7 +74,7 @@ def check_thresholds(cycle_id, readings, recette):
     updates = {}
     
     # 1. EC (Conductivité / Nutriments) - Alerte uniquement (pas d'actionneur dédié)
-    ec = readings.get("ec")
+    ec = readings.get("EC")
     if ec is not None:
         if recette.ec_min is not None and ec < recette.ec_min:
             alerts.append(f"ALERTE: EC trop bas ({ec} µS/cm). Ajoutez des nutriments manuellement.")
@@ -91,7 +91,7 @@ def check_thresholds(cycle_id, readings, recette):
 
     # 3. Température Air / Humidité (Ventilateur)
     temp_air = readings.get("temp_air")
-    humidite = readings.get("humidite_air")
+    humidite = readings.get("humidite")
     fan_needed = False
     
     if temp_air is not None and recette.temp_air_max is not None and temp_air > recette.temp_air_max:
