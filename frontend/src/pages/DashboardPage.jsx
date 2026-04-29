@@ -22,8 +22,17 @@ export default function DashboardPage() {
       console.log('Connecté au serveur WebSocket');
     });
 
+    // Real-time sensor updates — no page refresh needed
+    socket.on('nouvelles_lectures', (data) => {
+      setCapteurs(prev => prev.map(c => {
+        if (data[c.type_capteur] !== undefined) {
+          return { ...c, dernier_releve: data[c.type_capteur] };
+        }
+        return c;
+      }));
+    });
+
     socket.on('actuators_update', (data) => {
-      console.log('Mise à jour des actionneurs via Socket.IO:', data);
       setActionneurs(prev => prev.map(a => {
         let updated = { ...a };
         if (data[a.type] !== undefined) {
@@ -49,7 +58,9 @@ export default function DashboardPage() {
         client.get("/actionneurs"),
         client.get("/actionneurs/status")
       ]);
-      setCapteurs(resCapteurs.data || []);
+      // Filter out inactive sensors (like EC)
+      const activeCapteurs = (resCapteurs.data || []).filter(c => c.actif !== false);
+      setCapteurs(activeCapteurs);
       setActionneurs(resActionneurs.data || []);
       setHwStatus(resStatus.data || { connected: false, mock_mode: false });
       setError(null);
@@ -143,4 +154,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

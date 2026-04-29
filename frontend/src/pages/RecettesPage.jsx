@@ -13,7 +13,7 @@ export default function RecettesPage() {
   const [filterVariete, setFilterVariete] = useState("");
   const [form, setForm] = useState({
     nom_recette: "", id_variete: "", phase: "",
-    ec_min: "", ec_max: "", temp_eau_min: "", temp_eau_max: "",
+    temp_eau_min: "", temp_eau_max: "",
     temp_air_min: "", temp_air_max: "", humidite_min: "", humidite_max: "",
     luminosite_min: "", luminosite_max: "", luminosite_heures_jour: "", niveau_eau_min: "",
   });
@@ -34,7 +34,7 @@ export default function RecettesPage() {
     setEditing(null);
     setForm({
       nom_recette: "", id_variete: varietes[0]?.id_variete || "", phase: "",
-      ec_min: "", ec_max: "", temp_eau_min: "", temp_eau_max: "",
+      temp_eau_min: "", temp_eau_max: "",
       temp_air_min: "", temp_air_max: "", humidite_min: "", humidite_max: "",
       luminosite_min: "", luminosite_max: "", luminosite_heures_jour: "", niveau_eau_min: "",
     });
@@ -46,7 +46,6 @@ export default function RecettesPage() {
     setForm({
       nom_recette: r.nom_recette || "", id_variete: r.id_variete || "",
       phase: r.phase || "",
-      ec_min: r.ec_min ?? "", ec_max: r.ec_max ?? "",
       temp_eau_min: r.temp_eau_min ?? "", temp_eau_max: r.temp_eau_max ?? "",
       temp_air_min: r.temp_air_min ?? "", temp_air_max: r.temp_air_max ?? "",
       humidite_min: r.humidite_min ?? "", humidite_max: r.humidite_max ?? "",
@@ -116,7 +115,7 @@ export default function RecettesPage() {
                 <th>Nom</th>
                 <th>Variete</th>
                 <th>Phase</th>
-                <th>EC (µS/cm)</th>
+                <th>Temp. Air (°C)</th>
                 <th>Temp. Eau (°C)</th>
                 <th>Humidite (%)</th>
                 <th style={{ textAlign: "right" }}>Actions</th>
@@ -128,7 +127,7 @@ export default function RecettesPage() {
                   <td><MdMenuBook style={{ verticalAlign: "middle", marginRight: 8, color: "#a855f7" }} />{r.nom_recette}</td>
                   <td>{getVarieteNom(r.id_variete)}</td>
                   <td>{r.phase ? <span className="badge badge-blue">{r.phase}</span> : "—"}</td>
-                  <td>{r.ec_min != null ? `${r.ec_min} - ${r.ec_max}` : "—"}</td>
+                  <td>{r.temp_air_min != null ? `${r.temp_air_min} - ${r.temp_air_max}` : "—"}</td>
                   <td>{r.temp_eau_min != null ? `${r.temp_eau_min} - ${r.temp_eau_max}` : "—"}</td>
                   <td>{r.humidite_min != null ? `${r.humidite_min} - ${r.humidite_max}` : "—"}</td>
                   <td>
@@ -176,10 +175,7 @@ export default function RecettesPage() {
                 <label>Phase (ex: germination, croissance, floraison)</label>
                 <input className="form-input" value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value })} />
               </div>
-              <div className="form-row">
-                <div className="form-group"><label>EC Min (µS/cm)</label><input className="form-input" type="number" step="0.1" value={form.ec_min} onChange={(e) => setForm({ ...form, ec_min: e.target.value })} /></div>
-                <div className="form-group"><label>EC Max (µS/cm)</label><input className="form-input" type="number" step="0.1" value={form.ec_max} onChange={(e) => setForm({ ...form, ec_max: e.target.value })} /></div>
-              </div>
+
               <div className="form-row">
                 <div className="form-group"><label>Temp. Eau Min (°C)</label><input className="form-input" type="number" step="0.1" value={form.temp_eau_min} onChange={(e) => setForm({ ...form, temp_eau_min: e.target.value })} /></div>
                 <div className="form-group"><label>Temp. Eau Max (°C)</label><input className="form-input" type="number" step="0.1" value={form.temp_eau_max} onChange={(e) => setForm({ ...form, temp_eau_max: e.target.value })} /></div>

@@ -66,43 +66,45 @@ def create_app(config_class=None):
     from services.serial_service import serial_service
     from services.notification_service import notification_service
     
-    with app.app_context():
-        # Initialiser la connexion série au démarrage
-        serial_service.connect(app.config.get('SERIAL_PORT', 'COM3'), app.config.get('SERIAL_BAUDRATE', 9600))
-
-    # Wrapper pour le contexte Flask
-    def run_ebb_flow():
+    # Pour éviter le bug du "Port Déjà Ouvert" (PermissionError) à cause du reloader de Flask
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.config.get("DEBUG"):
         with app.app_context():
-            evaluate_ebb_and_flow()
+            # Initialiser la connexion série au démarrage
+            serial_service.connect(app.config.get('SERIAL_PORT', 'COM9'), app.config.get('SERIAL_BAUDRATE', 9600))
 
-    def run_sensors():
-        with app.app_context():
-            process_sensor_data()
+        # Wrapper pour le contexte Flask
+        def run_ebb_flow():
+            with app.app_context():
+                evaluate_ebb_and_flow()
 
-    def run_hourly_reports():
-        with app.app_context():
-            notification_service.send_hourly_report()
+        def run_sensors():
+            with app.app_context():
+                process_sensor_data()
 
-    # Configurer et démarrer le scheduler
-    scheduler.add_job(
-        id='ebb_and_flow_job',
-        func=run_ebb_flow,
-        trigger='interval',
-        seconds=10  # Évaluer toutes les 10 secondes pour le dev
-    )
-    scheduler.add_job(
-        id='sensors_job',
-        func=run_sensors,
-        trigger='interval',
-        seconds=5  # Lire les capteurs toutes les 5 secondes
-    )
-    scheduler.add_job(
-        id='hourly_report_job',
-        func=run_hourly_reports,
-        trigger='cron',
-        minute=0  # Exécuter à la minute 0 de chaque heure (toutes les heures)
-    )
-    scheduler.start()
+        def run_hourly_reports():
+            with app.app_context():
+                notification_service.send_hourly_report()
+
+        # Configurer et démarrer le scheduler
+        scheduler.add_job(
+            id='ebb_and_flow_job',
+            func=run_ebb_flow,
+            trigger='interval',
+            seconds=10  # Évaluer toutes les 10 secondes pour le dev
+        )
+        scheduler.add_job(
+            id='sensors_job',
+            func=run_sensors,
+            trigger='interval',
+            seconds=2  # Lire les capteurs toutes les 2 secondes
+        )
+        scheduler.add_job(
+            id='hourly_report_job',
+            func=run_hourly_reports,
+            trigger='cron',
+            minute=0  # Exécuter à la minute 0 de chaque heure (toutes les heures)
+        )
+        scheduler.start()
 
     return app
 

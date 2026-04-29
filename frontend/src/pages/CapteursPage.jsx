@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Area, AreaChart,
 } from "recharts";
 import { MdSensors, MdRefresh } from "react-icons/md";
@@ -9,12 +9,11 @@ import client from "../api/client";
 import "./shared.css";
 
 const SENSOR_CONFIG = {
-  EC:         { color: "#a855f7", unit: "µS/cm", icon: "⚡" },
-  temp_eau:   { color: "#3b82f6", unit: "°C",    icon: "🌡" },
-  temp_air:   { color: "#fb923c", unit: "°C",    icon: "🌡" },
-  humidite:   { color: "#22d3ee", unit: "%",     icon: "💧" },
-  luminosite: { color: "#facc15", unit: "lux",   icon: "☀" },
-  niveau_eau: { color: "#4ade80", unit: "cm",    icon: "💧" },
+  temp_eau:   { color: "#3b82f6", unit: "°C",  icon: "🌡" },
+  temp_air:   { color: "#fb923c", unit: "°C",  icon: "🌡" },
+  humidite:   { color: "#22d3ee", unit: "%",   icon: "💧" },
+  luminosite: { color: "#facc15", unit: "%",   icon: "☀" },
+  niveau_eau: { color: "#4ade80", unit: "%",   icon: "🌊" },
 };
 
 export default function CapteursPage() {
@@ -23,6 +22,7 @@ export default function CapteursPage() {
   const [lectures, setLectures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const selectedRef = useRef(null);
 
   useEffect(() => {
     fetchCapteurs();
@@ -33,13 +33,31 @@ export default function CapteursPage() {
     const socket = io(socketUrl);
 
     socket.on("nouvelles_lectures", (data) => {
-      setLectures((prev) => [...data.reverse(), ...prev].slice(0, 200));
+      // Update capteurs values in real-time
+      setCapteurs(prev => prev.map(c => {
+        if (data[c.type_capteur] !== undefined) {
+          return { ...c, dernier_releve: data[c.type_capteur] };
+        }
+        return c;
+      }));
+
+      // Add new point to chart if selected sensor has new data
+      if (selectedRef.current && data[selectedRef.current.type_capteur] !== undefined) {
+        const newPoint = {
+          valeur: data[selectedRef.current.type_capteur],
+          time: new Date().toLocaleTimeString("fr-FR", {
+            hour: "2-digit", minute: "2-digit", second: "2-digit",
+          }),
+        };
+        setLectures(prev => [...prev.slice(-49), newPoint]);
+      }
     });
 
     return () => socket.disconnect();
   }, []);
 
   useEffect(() => {
+    selectedRef.current = selectedCapteur;
     if (selectedCapteur) fetchLectures(selectedCapteur.id_capteur);
   }, [selectedCapteur]);
 
@@ -47,7 +65,8 @@ export default function CapteursPage() {
     try {
       setLoading(true);
       const res = await client.get("/capteurs");
-      const data = res.data || [];
+      // Filter out inactive sensors (like EC)
+      const data = (res.data || []).filter(c => c.actif !== false);
       setCapteurs(data);
       if (data.length > 0 && !selectedCapteur) setSelectedCapteur(data[0]);
     } catch (err) {
@@ -108,7 +127,7 @@ export default function CapteursPage() {
               <div className="stat-label">{sc.icon} {c.nom}</div>
               <div className="stat-value" style={{ color: sc.color }}>
                 {c.dernier_releve !== null && c.dernier_releve !== undefined
-                  ? c.dernier_releve
+                  ? Number(c.dernier_releve).toFixed(1)
                   : "--"}
               </div>
               <div className="stat-sub">{sc.unit}</div>

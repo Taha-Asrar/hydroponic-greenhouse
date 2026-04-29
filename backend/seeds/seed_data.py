@@ -1,7 +1,6 @@
 import os
 import sys
 
-# Set up path to import app and models
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app
@@ -11,8 +10,6 @@ from models import Utilisateur, Capteur, Actionneur, VarietePlante
 def seed_database():
     app = create_app()
     with app.app_context():
-        # Clean existing test data if any
-        
         # 1. Add admin user
         if not Utilisateur.query.filter_by(email="admin@hydro.local").first():
             admin = Utilisateur(
@@ -24,14 +21,13 @@ def seed_database():
             admin.set_password("password123")
             db.session.add(admin)
 
-        # 2. Add Capteurs
+        # 2. Add Capteurs (sans EC)
         capteurs = [
-            {"type_capteur": "EC", "nom": "Capteur EC", "unite": "µS/cm"},
-            {"type_capteur": "temp_eau", "nom": "Température Eau", "unite": "°C"},
-            {"type_capteur": "temp_air", "nom": "Température Air", "unite": "°C"},
-            {"type_capteur": "humidite", "nom": "Humidité Air", "unite": "%"},
-            {"type_capteur": "luminosite", "nom": "Luminosité", "unite": "lux"},
-            {"type_capteur": "niveau_eau", "nom": "Niveau Eau", "unite": "cm"}
+            {"type_capteur": "temp_eau",   "nom": "Temperature Eau",   "unite": "C"},
+            {"type_capteur": "temp_air",   "nom": "Temperature Air",   "unite": "C"},
+            {"type_capteur": "humidite",   "nom": "Humidite Air",      "unite": "%"},
+            {"type_capteur": "luminosite", "nom": "Luminosite",        "unite": "%"},
+            {"type_capteur": "niveau_eau", "nom": "Niveau Eau",        "unite": "%"},
         ]
         
         for capteur_data in capteurs:
@@ -39,12 +35,17 @@ def seed_database():
                 c = Capteur(**capteur_data)
                 db.session.add(c)
 
+        # Desactiver le capteur EC s'il existe
+        ec_capteur = Capteur.query.filter_by(type_capteur="EC").first()
+        if ec_capteur:
+            ec_capteur.actif = False
+
         # 3. Add Actionneurs
         actionneurs = [
             {"type": "pompe_alimentation", "nom": "Pompe Alimentation"},
-            {"type": "pompe_evacuation", "nom": "Pompe Évacuation"},
-            {"type": "eclairage", "nom": "Lampe"},
-            {"type": "ventilateur", "nom": "Ventilateur"}
+            {"type": "pompe_evacuation",   "nom": "Pompe Evacuation"},
+            {"type": "eclairage",          "nom": "Lampe"},
+            {"type": "ventilateur",        "nom": "Ventilateur"}
         ]
 
         for actionneur_data in actionneurs:
@@ -54,9 +55,9 @@ def seed_database():
 
         # 4. Add Varietes
         varietes = [
-            {"nom": "Laitue Pommée", "description": "Laitue classique idéale pour l'hydroponie.", "duree_croissance_jours": 35},
-            {"nom": "Basilic Grand Vert", "description": "Herbe aromatique très parfumée.", "duree_croissance_jours": 28},
-            {"nom": "Tomate Cerise", "description": "Variété naine pour serre.", "duree_croissance_jours": 60}
+            {"nom": "Laitue Pommee", "description": "Laitue classique ideale pour l'hydroponie.", "duree_croissance_jours": 35},
+            {"nom": "Basilic Grand Vert", "description": "Herbe aromatique tres parfumee.", "duree_croissance_jours": 28},
+            {"nom": "Tomate Cerise", "description": "Variete naine pour serre.", "duree_croissance_jours": 60}
         ]
 
         for var_data in varietes:

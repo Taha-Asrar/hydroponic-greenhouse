@@ -45,12 +45,15 @@ class SerialService:
                 return False
 
     def read_data(self):
-        """Lit les données envoyées par l'Arduino."""
+        """Lit les données envoyées par l'Arduino en vidant le buffer pour garder la plus récente."""
         if self.is_connected and self.serial_connection:
             if self.serial_connection.in_waiting > 0:
                 try:
-                    data = self.serial_connection.readline().decode('utf-8').strip()
-                    return data
+                    last_data = None
+                    # Lire jusqu'à ce que le buffer soit vide pour éviter tout retard (lag)
+                    while self.serial_connection.in_waiting > 0:
+                        last_data = self.serial_connection.readline().decode('utf-8').strip()
+                    return last_data
                 except Exception as e:
                     print(f"[Serial Service] Erreur de lecture: {e}")
                     return None

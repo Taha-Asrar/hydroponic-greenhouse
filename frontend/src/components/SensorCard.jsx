@@ -2,17 +2,16 @@ import React from "react";
 import "./SensorCard.css";
 
 export default function SensorCard({ name, value, unit, type, status = "normal" }) {
-  // Select icon/color based on sensor type
   const getTypeStyles = () => {
     switch (type) {
       case "temp_eau":
+        return { color: "var(--accent-blue)", icon: "🌡️" };
       case "temp_air":
         return { color: "var(--accent-orange)", icon: "🌡️" };
       case "humidite":
-      case "niveau_eau":
         return { color: "var(--accent-blue)", icon: "💧" };
-      case "EC":
-        return { color: "var(--accent-purple)", icon: "⚡" };
+      case "niveau_eau":
+        return { color: "var(--accent-blue)", icon: "🌊" };
       case "luminosite":
         return { color: "var(--accent-yellow)", icon: "☀️" };
       default:
@@ -22,6 +21,10 @@ export default function SensorCard({ name, value, unit, type, status = "normal" 
 
   const { color, icon } = getTypeStyles();
 
+  // Format display value
+  const displayValue = value !== null && value !== undefined ? 
+    (typeof value === 'number' ? value.toFixed(1) : value) : "--";
+
   return (
     <div className={`sensor-card status-${status}`}>
       <div className="sensor-card-header">
@@ -30,7 +33,7 @@ export default function SensorCard({ name, value, unit, type, status = "normal" 
       </div>
       <div className="sensor-card-body">
         <div className="sensor-value-container" style={{ '--glow-color': color }}>
-          <span className="sensor-value">{value !== null ? value : "--"}</span>
+          <span className="sensor-value">{displayValue}</span>
           <span className="sensor-unit">{unit}</span>
         </div>
       </div>
