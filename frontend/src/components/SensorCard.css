@@ -1,0 +1,107 @@
+.sensor-card {
+  background: var(--bg-card, rgba(30, 30, 35, 0.6));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(12px);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sensor-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--glow-color, var(--primary-color)), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sensor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sensor-card:hover::before {
+  opacity: 1;
+}
+
+.sensor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sensor-icon {
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.sensor-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.sensor-card-body {
+  display: flex;
+  align-items: baseline;
+}
+
+.sensor-value-container {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  text-shadow: 0 0 20px var(--glow-color);
+}
+
+.sensor-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -1px;
+}
+
+.sensor-unit {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-muted, #888);
+}
+
+.status-warning {
+  border-color: rgba(255, 170, 0, 0.5);
+  background: rgba(255, 170, 0, 0.05);
+}
+
+.status-critical {
+  border-color: rgba(255, 50, 50, 0.5);
+  background: rgba(255, 50, 50, 0.05);
+  animation: pulse-critical 2s infinite;
+}
+
+.sensor-alert {
+  font-size: 0.8rem;
+  color: #ff3232;
+  font-weight: 600;
+  margin-top: -8px;
+}
+
+@keyframes pulse-critical {
+  0% { box-shadow: 0 0 0 0 rgba(255, 50, 50, 0.2); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 50, 50, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 50, 50, 0); }
+}
